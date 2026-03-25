@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>AIチャット相談 | makes-momo EAP</title>
+  <style>
+    :root {
+      --main: #1a2b4a;
+      --accent: #2e4a7a;
+      --bg: #e8edf5;
+      --chat-bg: #d5dde8;
+      --bubble-ai: #ffffff;
+      --bubble-user: linear-gradient(145deg, #3a5a94 0%, var(--accent) 100%);
+      --text: #1a2b4a;
+      --muted: #5a6b85;
+      --border: #c8d4e6;
+      --shadow: rgba(26, 43, 74, 0.1);
+      --warm: #fff8f4;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      display: flex;
+      flex-direction: column;
+      min-height: 100dvh;
+      min-height: 100vh;
+      padding-bottom: calc(4.25rem + env(safe-area-inset-bottom, 0px));
+    }
+    .top {
+      flex-shrink: 0;
+      background: linear-gradient(180deg, var(--main) 0%, var(--accent) 100%);
+      color: #fff;
+      padding: 0.65rem 0.9rem calc(0.65rem + env(safe-area-inset-top, 0px));
+      box-shadow: 0 2px 12px var(--shadow);
+    }
+    .top h1 {
+      margin: 0 0 0.45rem;
+      font-size: 0.95rem;
+      font-weight: 700;
+      text-align: center;
+      letter-spacing: 0.02em;
+    }
+    .assure {
+      margin: 0;
+      font-size: 0.72rem;
+      font-weight: 600;
+      line-height: 1.65;
+      text-align: center;
+      opacity: 0.94;
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 10px;
+      padding: 0.5rem 0.6rem;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+    .chat-wrap {
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      max-width: 520px;
+      width: 100%;
+      margin: 0 auto;
+    }
+    .chat-scroll {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 0.85rem 0.75rem 0.5rem;
+      background: linear-gradient(180deg, #dce4f0 0%, var(--chat-bg) 40%, #cfd9e8 100%);
+      -webkit-overflow-scrolling: touch;
+    }
+    .msg {
+      display: flex;
+      margin-bottom: 0.75rem;
+      align-items: flex-end;
+      gap: 0.35rem;
+      animation: pop 0.25s ease;
+    }
+    @keyframes pop {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .msg.ai { justify-content: flex-start; }
+    .msg.user { justify-content: flex-end; }
+    .avatar {
+      width: 2rem;
+      height: 2rem;
+      border-radius: 50%;
+      background: linear-gradient(145deg, #f0f4fc, #dce6f5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+      border: 2px solid #fff;
+      box-shadow: 0 2px 6px var(--shadow);
+    }
+    .msg.user .avatar { display: none; }
+    .bubble {
+      max-width: min(82%, 340px);
+      padding: 0.65rem 0.85rem;
+      border-radius: 18px;
+      font-size: 0.88rem;
+      line-height: 1.65;
+      word-break: break-word;
+      box-shadow: 0 2px 8px var(--shadow);
+    }
+    .msg.ai .bubble {
+      background: var(--bubble-ai);
+      border: 1px solid var(--border);
+      border-bottom-left-radius: 6px;
+      color: var(--text);
+    }
+    .msg.user .bubble {
+      background: var(--bubble-user);
+      color: #fff;
+      border-bottom-right-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+    .bottom {
+      flex-shrink: 0;
+      background: linear-gradient(180deg, #f6f8fc 0%, #eef2f9 100%);
+      border-top: 1px solid var(--border);
+      padding: 0.55rem 0.65rem calc(0.55rem + env(safe-area-inset-bottom, 0px));
+      box-shadow: 0 -4px 20px rgba(26, 43, 74, 0.06);
+      max-width: 520px;
+      width: 100%;
+      margin: 0 auto;
+      margin-bottom: calc(4.25rem + env(safe-area-inset-bottom, 0px));
+    }
+    .row-send {
+      display: flex;
+      gap: 0.45rem;
+      align-items: flex-end;
+      margin-bottom: 0.55rem;
+    }
+    .row-send textarea {
+      flex: 1;
+      min-height: 2.5rem;
+      max-height: 6rem;
+      border: 2px solid var(--border);
+      border-radius: 14px;
+      padding: 0.55rem 0.7rem;
+      font-size: 0.92rem;
+      font-family: inherit;
+      resize: none;
+      line-height: 1.45;
+      background: #fff;
+      color: var(--text);
+    }
+    .row-send textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(46, 74, 122, 0.12);
+    }
+    .row-send textarea::placeholder { color: #8a96ad; }
+    .btn-send {
+      flex-shrink: 0;
+      width: 3.35rem;
+      height: 2.5rem;
+      border: none;
+      border-radius: 12px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      font-family: inherit;
+      color: #fff;
+      background: linear-gradient(180deg, var(--accent) 0%, var(--main) 100%);
+      cursor: pointer;
+      box-shadow: 0 3px 10px rgba(26, 43, 74, 0.22);
+      transition: transform 0.12s, filter 0.15s;
+    }
+    .btn-send:active { transform: scale(0.96); }
+    .btn-send:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .btn-pro {
+      display: block;
+      width: 100%;
+      text-align: center;
+      text-decoration: none;
+      font-size: 0.88rem;
+      font-weight: 700;
+      font-family: inherit;
+      color: var(--main);
+      background: linear-gradient(165deg, #fffefb 0%, var(--warm) 100%);
+      border: 2px solid var(--accent);
+      border-radius: 14px;
+      padding: 0.75rem 0.85rem;
+      box-shadow: 0 3px 12px var(--shadow);
+      transition: transform 0.12s, background 0.15s;
+    }
+    .btn-pro:active { transform: scale(0.99); }
+    .btn-pro span { margin-right: 0.25rem; }
+    .msg.ai .bubble.bubble--risk {
+      max-width: min(92%, 360px);
+      border-color: #c45c5c;
+      box-shadow: 0 0 0 3px rgba(196, 92, 92, 0.12), 0 4px 14px var(--shadow);
+    }
+    .btn-risk-now {
+      display: block;
+      width: 100%;
+      margin-top: 0.85rem;
+      text-align: center;
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 800;
+      font-family: inherit;
+      color: #fff;
+      background: linear-gradient(180deg, #c45c5c 0%, #a53d3d 100%);
+      border: 2px solid #8b2f2f;
+      border-radius: 12px;
+      padding: 0.75rem 0.85rem;
+      box-shadow: 0 4px 16px rgba(165, 61, 61, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+      animation: riskPulse 2s ease-in-out infinite;
+    }
+    @keyframes riskPulse {
+      0%, 100% { box-shadow: 0 4px 16px rgba(165, 61, 61, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.2) inset; }
+      50% { box-shadow: 0 6px 22px rgba(165, 61, 61, 0.5), 0 0 0 3px rgba(196, 92, 92, 0.25); }
+    }
+    .btn-risk-now:active { transform: scale(0.98); }
+    .bottom-nav {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 1000;
+      display: flex;
+      justify-content: space-around;
+      align-items: stretch;
+      gap: 0.25rem;
+      padding: 0.5rem 0.5rem calc(0.5rem + env(safe-area-inset-bottom, 0px));
+      background: #fff;
+      box-shadow: 0 -1px 0 rgba(26, 43, 74, 0.08);
+    }
+    .bottom-nav a {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.2rem;
+      min-width: 0;
+      padding: 0.35rem 0.25rem;
+      text-decoration: none;
+      color: var(--main);
+      font-size: 0.65rem;
+      font-weight: 500;
+      opacity: 0.55;
+      transition: opacity 0.15s ease, transform 0.15s ease;
+    }
+    .bottom-nav a svg {
+      width: 1.35rem;
+      height: 1.35rem;
+      flex-shrink: 0;
+    }
+    .bottom-nav a[aria-current="page"] {
+      opacity: 1;
+      font-weight: 700;
+    }
+    .bottom-nav a[aria-current="page"] svg {
+      transform: scale(1.12);
+    }
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <h1>サポートAIチャット</h1>
+    <p class="assure">
+      このチャットの内容は会社には一切伝わりません。<br />
+      安心してご利用ください。
+    </p>
+  </header>
+
+  <div class="chat-wrap">
+    <div class="chat-scroll" id="chatScroll" role="log" aria-live="polite" aria-relevant="additions"></div>
+  </div>
+
+  <div class="bottom">
+    <form class="row-send" id="chatForm" autocomplete="off">
+      <label for="userInput" class="visually-hidden">メッセージ</label>
+      <textarea
+        id="userInput"
+        rows="1"
+        placeholder="メッセージを入力…"
+        maxlength="2000"
+        aria-label="メッセージ入力"
+      ></textarea>
+      <button type="submit" class="btn-send" id="btnSend">送信</button>
+    </form>
+    <a class="btn-pro" href="./yoyaku_employee.html"><span aria-hidden="true">📅</span>専門家に相談する</a>
+  </div>
+  <nav class="bottom-nav" aria-label="メインメニュー">
+    <a href="./eap.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      ホーム
+    </a>
+    <a href="./check.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      記録
+    </a>
+    <a href="./chat.html" aria-current="page">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      相談
+    </a>
+    <a href="./yoyaku_employee.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      予約
+    </a>
+  </nav>
+
+  <script>
+    (function () {
+      var INITIAL_AI =
+        "こんにちは。makes-momoのサポートAIです。\n" +
+        "今日の調子はいかがですか？\n" +
+        "どんな小さなことでも、気軽に話しかけてください😊";
+
+      var RISK_TEXT =
+        "あなたのことがとても心配です。\n" +
+        "今すぐ、専門家に話を聞いてもらいませんか。\n" +
+        "一人で抱え込まないでください。";
+
+      var RISK_REGEX = /死にたい|消えたい|限界|つらい|もう無理|消えてしまいたい/;
+
+      var REPLIES = {
+        professional:
+          "専門家に相談したいとのこと、素直に伝えてくださってありがとうございます。もう少し詳しくお話ししたい気持ち、とてもよく分かります。\n\n" +
+          "画面下の「専門家に相談する」から、対面・オンラインのご希望日時をお送りいただけます。担当者からご連絡し、ペースを大切にしながら進めていきましょう。",
+
+        work:
+          "仕事のストレスや悩みを抱えているのですね。長く続くと心も身体も重く感じやすくなります。\n\n" +
+          "今の負担の「大きさ」や「いつから」感じ始めたか、少しずつ言葉にしてみても大丈夫です。完璧にまとまらなくても大丈夫ですよ。ここでは評価されません。必要なら専門家と一緒に整理することもできます。",
+
+        relation:
+          "人間関係のこと、胸の内を話してくださってありがとうございます。職場での距離感や言葉の受け取り方で、つらくなることは誰にでもあります。\n\n" +
+          "「自分が悪い」と決めつけなくて大丈夫です。まずは今の気持ちをそのまま共有してみてください。落ち着いたら、専門家と対話しながら対処のヒントを一緒に探すこともできます。",
+
+        bodymind:
+          "体や気持ちの不調を感じているのですね。気づいて言葉にしてくださったこと、とても大切な一歩です。\n\n" +
+          "痛みや強い症状がある場合は、医療機関の受診も検討してください。心の重さだけでも、十分に相談の理由になります。無理のない範囲で休む・整えることも、立派なセルフケアです。",
+
+        sleep:
+          "眠れない、疲れが取れないとのこと…つらいですね。睡眠と疲労は、心の負担とも深くつながっています。\n\n" +
+          "寝る前のルーティンや、カフェイン・スマホの時間など、小さく試せる工夫もあります。続くようでしたら、専門家に状況をお話ししてみるのもおすすめです。",
+
+        default:
+          "メッセージありがとうございます。ゆっくりで大丈夫ですので、もう少し具体的に教えていただけると、お話ししやすくなります。\n\n" +
+          "仕事のこと、人間関係、体調や気分、眠りのことなど、どんなテーマでも構いません。しんどいときは、下の「専門家に相談する」から予約していただくのもひとつの道です。"
+      };
+
+      var KEYWORDS = [
+        {
+          test: /専門家|カウンセラー|カウンセリング|予約したい|臨床心理|精神科|医師|クリニック|面談して|人に会って|専門の人/,
+          key: "professional"
+        },
+        {
+          test: /仕事|職場|上司|残業|業務|評価|転職|ストレス|プレッシャー|ミス|失敗|納期|クレーム/,
+          key: "work"
+        },
+        {
+          test: /人間関係|同僚|部下|パワハラ|モラハラ|孤立|仲間|嫌い|苦手|コミュニケーション|雰囲気/,
+          key: "relation"
+        },
+        {
+          test: /眠れ|不眠|寝つき|睡眠|疲れ|だるい|倦怠|取れない|寝不足/,
+          key: "sleep"
+        },
+        {
+          test: /体調|体|頭痛|腹痛|吐き気|気持ち|気分|不安|うつ|抑うつ|パニック|動悸|息苦しい|苦しい|しんどい|心配/,
+          key: "bodymind"
+        }
+      ];
+
+      var scroll = document.getElementById("chatScroll");
+      var form = document.getElementById("chatForm");
+      var input = document.getElementById("userInput");
+      var btnSend = document.getElementById("btnSend");
+
+      function escapeHtml(s) {
+        return s
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      function formatBody(text) {
+        return escapeHtml(text).replace(/\n/g, "<br />");
+      }
+
+      function appendMessage(role, text) {
+        var wrap = document.createElement("div");
+        wrap.className = "msg " + (role === "user" ? "user" : "ai");
+        var bubble = document.createElement("div");
+        bubble.className = "bubble";
+        bubble.innerHTML = formatBody(text);
+        if (role === "ai") {
+          var av = document.createElement("div");
+          av.className = "avatar";
+          av.setAttribute("aria-hidden", "true");
+          av.textContent = "🤖";
+          wrap.appendChild(av);
+        }
+        wrap.appendChild(bubble);
+        scroll.appendChild(wrap);
+        scroll.scrollTop = scroll.scrollHeight;
+      }
+
+      function appendRiskAiMessage() {
+        var wrap = document.createElement("div");
+        wrap.className = "msg ai";
+        var av = document.createElement("div");
+        av.className = "avatar";
+        av.setAttribute("aria-hidden", "true");
+        av.textContent = "🤖";
+        var bubble = document.createElement("div");
+        bubble.className = "bubble bubble--risk";
+        var link = document.createElement("a");
+        link.className = "btn-risk-now";
+        link.href = "./yoyaku_employee.html";
+        link.textContent = "今すぐ専門家に相談する";
+        bubble.innerHTML = formatBody(RISK_TEXT);
+        bubble.appendChild(link);
+        wrap.appendChild(av);
+        wrap.appendChild(bubble);
+        scroll.appendChild(wrap);
+        scroll.scrollTop = scroll.scrollHeight;
+      }
+
+      function pickReply(userText) {
+        var t = userText.trim();
+        if (!t) return REPLIES.default;
+        for (var i = 0; i < KEYWORDS.length; i++) {
+          if (KEYWORDS[i].test.test(t)) {
+            return REPLIES[KEYWORDS[i].key];
+          }
+        }
+        return REPLIES.default;
+      }
+
+      function sendUserMessage() {
+        var t = input.value.trim();
+        if (!t) return;
+        appendMessage("user", t);
+        input.value = "";
+        input.style.height = "auto";
+        btnSend.disabled = true;
+        window.setTimeout(function () {
+          if (RISK_REGEX.test(t)) {
+            appendRiskAiMessage();
+          } else {
+            appendMessage("ai", pickReply(t));
+          }
+          btnSend.disabled = false;
+          input.focus();
+        }, 450);
+      }
+
+      appendMessage("ai", INITIAL_AI);
+
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        sendUserMessage();
+      });
+
+      input.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          sendUserMessage();
+        }
+      });
+
+      input.addEventListener("input", function () {
+        input.style.height = "auto";
+        input.style.height = Math.min(input.scrollHeight, 96) + "px";
+      });
+    })();
+  </script>
+</body>
+</html>

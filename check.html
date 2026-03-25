@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>コンディション記録 | EAP</title>
+  <style>
+    :root {
+      --main: #1a2b4a;
+      --accent: #2e4a7a;
+      --bg: #f4f7fc;
+      --card: #ffffff;
+      --text: #1a2b4a;
+      --muted: #5a6b85;
+      --border: #d8e0ef;
+      --shadow: rgba(26, 43, 74, 0.08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100dvh;
+      font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+      background: linear-gradient(165deg, #eef3fb 0%, var(--bg) 45%, #e8eef8 100%);
+      color: var(--text);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      padding-bottom: calc(4.25rem + env(safe-area-inset-bottom, 0px));
+    }
+    .wrap { max-width: 420px; margin: 0 auto; padding: 1.25rem 1rem 2.5rem; }
+    header { text-align: center; margin-bottom: 1.5rem; }
+    header h1 { margin: 0 0 0.35rem; font-size: 1.15rem; font-weight: 700; color: var(--main); }
+    .date-line { font-size: 0.95rem; color: var(--accent); font-weight: 600; }
+    .card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 1.1rem 1rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 4px 20px var(--shadow);
+      border: 1px solid var(--border);
+    }
+    .card h2 {
+      margin: 0 0 0.75rem;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 0.02em;
+    }
+    .type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; }
+    .type-option { position: relative; cursor: pointer; }
+    .type-option input { position: absolute; opacity: 0; pointer-events: none; }
+    .type-face {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.25rem;
+      border: 2px solid var(--border);
+      border-radius: 14px;
+      padding: 0.85rem 0.5rem;
+      text-align: center;
+      background: #fafcfe;
+      transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+      min-height: 4.5rem;
+    }
+    .type-option input:focus-visible + .type-face { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .type-option input:checked + .type-face {
+      border-color: var(--accent);
+      background: linear-gradient(180deg, #f0f4fc 0%, #e4ecf8 100%);
+      box-shadow: 0 0 0 3px rgba(46, 74, 122, 0.15);
+    }
+    .type-emoji { font-size: 1.5rem; line-height: 1; }
+    .type-label { font-size: 0.72rem; font-weight: 600; color: var(--main); line-height: 1.35; }
+    .emoji-row { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.4rem; }
+    .emoji-btn {
+      flex: 1 1 calc(20% - 0.35rem);
+      min-width: 56px;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      background: #fafcfe;
+      padding: 0.45rem 0.2rem 0.35rem;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s, transform 0.15s;
+      font: inherit;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.15rem;
+    }
+    .emoji-btn:active { transform: scale(0.96); }
+    .emoji-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .emoji-btn.selected {
+      border-color: var(--accent);
+      background: linear-gradient(180deg, #f0f4fc 0%, #e4ecf8 100%);
+      box-shadow: 0 0 0 3px rgba(46, 74, 122, 0.12);
+    }
+    .emoji-btn .e { font-size: 1.65rem; line-height: 1; }
+    .emoji-btn .t { font-size: 0.58rem; font-weight: 600; color: var(--muted); line-height: 1.2; text-align: center; }
+    .visually-hidden {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+    }
+    textarea {
+      width: 100%; min-height: 72px; border: 2px solid var(--border); border-radius: 12px;
+      padding: 0.65rem 0.75rem; font-size: 0.95rem; font-family: inherit; resize: vertical;
+      color: var(--text); background: #fafcfe;
+    }
+    textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(46, 74, 122, 0.12); }
+    textarea::placeholder { color: #8a96ad; }
+    .submit-wrap { margin-top: 1.25rem; }
+    .submit-btn {
+      width: 100%; border: none; border-radius: 14px; padding: 0.95rem 1rem;
+      font-size: 1rem; font-weight: 700; font-family: inherit; color: #fff;
+      background: linear-gradient(180deg, var(--accent) 0%, var(--main) 100%);
+      cursor: pointer; box-shadow: 0 6px 18px rgba(26, 43, 74, 0.25);
+      transition: opacity 0.2s, transform 0.15s, filter 0.2s;
+    }
+    .submit-btn:not(:disabled):active { transform: scale(0.98); }
+    .submit-btn:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; filter: grayscale(0.2); }
+    .btn-google-form {
+      display: block;
+      width: 100%;
+      margin-top: 0.75rem;
+      padding: 0.85rem 1rem;
+      border-radius: 14px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      font-family: inherit;
+      color: #fff;
+      text-align: center;
+      text-decoration: none;
+      background: linear-gradient(180deg, var(--accent) 0%, var(--main) 100%);
+      box-shadow: 0 6px 18px rgba(26, 43, 74, 0.25);
+      transition: transform 0.15s, filter 0.2s;
+      border: none;
+      cursor: pointer;
+      box-sizing: border-box;
+    }
+    .btn-google-form:hover { filter: brightness(1.05); }
+    .btn-google-form:active { transform: scale(0.98); }
+    .success-panel .btn-google-form { margin-top: 1.15rem; }
+    .success-panel { display: none; text-align: center; padding: 2rem 1rem; }
+    .success-panel.show { display: block; }
+    .success-panel .icon { font-size: 3rem; margin-bottom: 0.75rem; line-height: 1; }
+    .success-panel p { margin: 0; font-size: 1.1rem; font-weight: 700; color: var(--main); }
+    #form-root.hidden { display: none; }
+    .bottom-nav {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 1000;
+      display: flex;
+      justify-content: space-around;
+      align-items: stretch;
+      gap: 0.25rem;
+      padding: 0.5rem 0.5rem calc(0.5rem + env(safe-area-inset-bottom, 0px));
+      background: #fff;
+      box-shadow: 0 -1px 0 rgba(26, 43, 74, 0.08);
+    }
+    .bottom-nav a {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.2rem;
+      min-width: 0;
+      padding: 0.35rem 0.25rem;
+      text-decoration: none;
+      color: var(--main);
+      font-size: 0.65rem;
+      font-weight: 500;
+      opacity: 0.55;
+      transition: opacity 0.15s ease, transform 0.15s ease;
+    }
+    .bottom-nav a svg {
+      width: 1.35rem;
+      height: 1.35rem;
+      flex-shrink: 0;
+    }
+    .bottom-nav a[aria-current="page"] {
+      opacity: 1;
+      font-weight: 700;
+    }
+    .bottom-nav a[aria-current="page"] svg {
+      transform: scale(1.12);
+    }
+    @media (max-width: 360px) {
+      .emoji-btn .t { font-size: 0.52rem; }
+      .type-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>今日のコンディション</h1>
+      <p class="date-line" id="todayDate" aria-live="polite"></p>
+    </header>
+    <div id="form-root">
+      <form id="checkForm" novalidate>
+        <section class="card" aria-labelledby="label-type">
+          <h2 id="label-type">0. 利用者の種別</h2>
+          <div class="type-grid" role="radiogroup" aria-labelledby="label-type">
+            <label class="type-option">
+              <input type="radio" name="userType" value="employee" required />
+              <span class="type-face">
+                <span class="type-emoji" aria-hidden="true">👤</span>
+                <span class="type-label">従業員として<br />記録する</span>
+              </span>
+            </label>
+            <label class="type-option">
+              <input type="radio" name="userType" value="hr" required />
+              <span class="type-face">
+                <span class="type-emoji" aria-hidden="true">📋</span>
+                <span class="type-label">人事・総務担当者として<br />記録する</span>
+              </span>
+            </label>
+          </div>
+        </section>
+        <section class="card" aria-labelledby="label-body">
+          <h2 id="label-body">1. 体の調子</h2>
+          <div class="emoji-row" id="bodyRow" role="group" aria-labelledby="label-body"></div>
+        </section>
+        <section class="card" aria-labelledby="label-mood">
+          <h2 id="label-mood">2. 気分・メンタル</h2>
+          <div class="emoji-row" id="moodRow" role="group" aria-labelledby="label-mood"></div>
+        </section>
+        <section class="card" aria-labelledby="label-note">
+          <h2 id="label-note">3. 今日の一言（任意）</h2>
+          <label for="note" class="visually-hidden">今日の一言</label>
+          <textarea id="note" name="note" maxlength="500" placeholder="今日の気持ちを一言どうぞ（任意）" rows="3"></textarea>
+        </section>
+        <div class="submit-wrap">
+          <button type="submit" class="submit-btn" id="submitBtn" disabled>記録する</button>
+          <a
+            class="btn-google-form"
+            href="https://forms.gle/JUcj38vMKKQG3bv87"
+            target="_blank"
+            rel="noopener noreferrer"
+          >Googleフォームで回答する</a>
+        </div>
+      </form>
+    </div>
+    <div class="success-panel card" id="successPanel" role="status" aria-live="polite">
+      <div class="icon" aria-hidden="true">✨</div>
+      <p>今日も記録できました！お疲れさまです😊</p>
+      <a
+        class="btn-google-form"
+        href="https://forms.gle/JUcj38vMKKQG3bv87"
+        target="_blank"
+        rel="noopener noreferrer"
+      >Googleフォームで回答する</a>
+    </div>
+  </div>
+  <nav class="bottom-nav" aria-label="メインメニュー">
+    <a href="./eap.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      ホーム
+    </a>
+    <a href="./check.html" aria-current="page">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      記録
+    </a>
+    <a href="./chat.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      相談
+    </a>
+    <a href="./yoyaku_employee.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      予約
+    </a>
+  </nav>
+  <script>
+    (function () {
+      var LEVELS = [
+        { emoji: "😩", label: "とても辛い", value: "1" },
+        { emoji: "😞", label: "辛い", value: "2" },
+        { emoji: "😐", label: "普通", value: "3" },
+        { emoji: "😊", label: "良い", value: "4" },
+        { emoji: "😄", label: "とても良い", value: "5" }
+      ];
+      var todayEl = document.getElementById("todayDate");
+      var form = document.getElementById("checkForm");
+      var formRoot = document.getElementById("form-root");
+      var successPanel = document.getElementById("successPanel");
+      var submitBtn = document.getElementById("submitBtn");
+      var bodyRow = document.getElementById("bodyRow");
+      var moodRow = document.getElementById("moodRow");
+      var bodyInput = null;
+      var moodInput = null;
+      function formatToday() {
+        var d = new Date();
+        var w = ["日", "月", "火", "水", "木", "金", "土"];
+        return (
+          d.getFullYear() +
+          "年" +
+          (d.getMonth() + 1) +
+          "月" +
+          d.getDate() +
+          "日（" +
+          w[d.getDay()] +
+          "）"
+        );
+      }
+      todayEl.textContent = formatToday();
+      function buildRow(container, name, hiddenHolder) {
+        var input = document.createElement("input");
+        input.type = "hidden";
+        input.name = name;
+        input.required = true;
+        hiddenHolder.appendChild(input);
+        LEVELS.forEach(function (lv) {
+          var btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "emoji-btn";
+          btn.setAttribute("aria-pressed", "false");
+          btn.dataset.value = lv.value;
+          btn.innerHTML = '<span class="e" aria-hidden="true">' + lv.emoji + '</span><span class="t">' + lv.label + "</span>";
+          btn.addEventListener("click", function () {
+            container.querySelectorAll(".emoji-btn").forEach(function (b) {
+              b.classList.remove("selected");
+              b.setAttribute("aria-pressed", "false");
+            });
+            btn.classList.add("selected");
+            btn.setAttribute("aria-pressed", "true");
+            input.value = lv.value;
+            updateSubmit();
+          });
+          container.appendChild(btn);
+        });
+        return input;
+      }
+      var hiddenWrap = document.createElement("div");
+      hiddenWrap.style.cssText = "position:absolute;width:0;height:0;overflow:hidden;clip:rect(0,0,0,0);";
+      form.insertBefore(hiddenWrap, form.firstChild);
+      bodyInput = buildRow(bodyRow, "bodyLevel", hiddenWrap);
+      moodInput = buildRow(moodRow, "moodLevel", hiddenWrap);
+      function updateSubmit() {
+        var typeOk = form.querySelector('input[name="userType"]:checked');
+        var bodyOk = bodyInput.value;
+        var moodOk = moodInput.value;
+        submitBtn.disabled = !(typeOk && bodyOk && moodOk);
+      }
+      form.querySelectorAll('input[name="userType"]').forEach(function (r) {
+        r.addEventListener("change", updateSubmit);
+      });
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        if (submitBtn.disabled) return;
+        formRoot.classList.add("hidden");
+        successPanel.classList.add("show");
+      });
+    })();
+  </script>
+</body>
+</html>

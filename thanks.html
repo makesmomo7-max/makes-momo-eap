@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>送信完了 | makes-momo EAP</title>
+  <style>
+    :root {
+      --main: #1a2b4a;
+      --accent: #2e4a7a;
+      --bg: #f4f7fc;
+      --card: #ffffff;
+      --text: #1a2b4a;
+      --muted: #5a6b85;
+      --border: #d8e0ef;
+      --shadow: rgba(26, 43, 74, 0.08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100dvh;
+      display: grid;
+      place-items: center;
+      padding: 1rem;
+      font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+      background: linear-gradient(165deg, #eef3fb 0%, var(--bg) 45%, #e8eef8 100%);
+      color: var(--text);
+    }
+    .card {
+      width: min(440px, 100%);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 4px 20px var(--shadow);
+      text-align: center;
+      padding: 2rem 1.2rem 1.4rem;
+    }
+    .icon {
+      font-size: 3rem;
+      line-height: 1;
+      margin-bottom: 0.7rem;
+    }
+    h1 {
+      margin: 0 0 0.65rem;
+      font-size: 1.2rem;
+      color: var(--main);
+    }
+    p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.75;
+      font-size: 0.95rem;
+    }
+    .btn {
+      display: block;
+      margin-top: 1.15rem;
+      text-decoration: none;
+      border-radius: 14px;
+      padding: 0.9rem 1rem;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #fff;
+      background: linear-gradient(180deg, var(--accent) 0%, var(--main) 100%);
+      box-shadow: 0 6px 18px rgba(26, 43, 74, 0.25);
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="icon" aria-hidden="true">✨</div>
+    <h1>送信完了</h1>
+    <p>
+      ご予約を受け付けました。<br />
+      担当者よりご連絡いたします。お気軽にお待ちください😊
+    </p>
+    <a class="btn" href="./eap.html">案内ページに戻る</a>
+  </main>
+</body>
+</html>
