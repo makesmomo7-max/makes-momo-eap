@@ -444,6 +444,10 @@
 
   <script>
     (function () {
+      // TODO: GASを「ウェブアプリ」としてデプロイしたURLに差し替えてください
+      // 例: https://script.google.com/macros/s/XXXXX/exec
+      var GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbzI86Hpb6jykTtd91VVELS7hswOh4Xyq10QPjCeT5OQty4s_iSwZj-6pgBTYdFtHjrP/exec";
+
       var SLOT_MINUTES = [0, 15, 30, 45];
       var BLOCK_MINUTES = 75; // 50分相談 + 10分延長バッファ + 15分準備
       var form = document.getElementById("reserveForm");
@@ -654,6 +658,7 @@
       function buildPayload() {
         var methodEl = form.querySelector('input[name="method"]:checked');
         return {
+          formType: "reservation",
           submittedAt: new Date().toISOString(),
           fullName: document.getElementById("fullName").value.trim(),
           company: document.getElementById("company").value.trim(),
@@ -693,7 +698,25 @@
         document.getElementById("prefer3").value = payload.prefer3;
 
         setSubmittingState(true);
-        window.location.href = "./thanks.html";
+        var params = new URLSearchParams();
+        Object.keys(payload).forEach(function (k) {
+          params.set(k, payload[k] == null ? "" : String(payload[k]));
+        });
+
+        fetch(GAS_ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+          body: params.toString()
+        })
+          .then(function (r) { return r.json().catch(function () { return null; }); })
+          .then(function (data) {
+            if (!data || data.ok !== true) throw new Error("保存に失敗しました");
+            window.location.href = "./thanks.html";
+          })
+          .catch(function () {
+            setSubmittingState(false);
+            showSubmitError("送信に失敗しました。通信状況を確認して、もう一度お試しください。");
+          });
       });
 
       loadBookedReservations();

@@ -246,6 +246,10 @@
   </nav>
   <script>
     (function () {
+      // TODO: GASを「ウェブアプリ」としてデプロイしたURLに差し替えてください
+      // 例: https://script.google.com/macros/s/XXXXX/exec
+      var GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbzI86Hpb6jykTtd91VVELS7hswOh4Xyq10QPjCeT5OQty4s_iSwZj-6pgBTYdFtHjrP/exec";
+
       var LEVELS = [
         { emoji: "😩", label: "とても辛い", value: "1" },
         { emoji: "😞", label: "辛い", value: "2" },
@@ -321,8 +325,34 @@
       form.addEventListener("submit", function (e) {
         e.preventDefault();
         if (submitBtn.disabled) return;
-        formRoot.classList.add("hidden");
-        successPanel.classList.add("show");
+        submitBtn.disabled = true;
+        submitBtn.textContent = "送信中...";
+
+        var params = new URLSearchParams();
+        params.set("formType", "health");
+        params.set("submittedAt", new Date().toISOString());
+        var typeOk = form.querySelector('input[name="userType"]:checked');
+        params.set("userType", typeOk ? typeOk.value : "");
+        params.set("bodyLevel", bodyInput.value || "");
+        params.set("moodLevel", moodInput.value || "");
+        params.set("note", (document.getElementById("note").value || "").trim());
+
+        fetch(GAS_ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+          body: params.toString()
+        })
+          .then(function (r) { return r.json().catch(function () { return null; }); })
+          .then(function (data) {
+            if (!data || data.ok !== true) throw new Error("保存に失敗しました");
+            formRoot.classList.add("hidden");
+            successPanel.classList.add("show");
+          })
+          .catch(function () {
+            submitBtn.disabled = false;
+            submitBtn.textContent = "記録する";
+            alert("記録の保存に失敗しました。通信状況を確認して、もう一度お試しください。");
+          });
       });
     })();
   </script>
