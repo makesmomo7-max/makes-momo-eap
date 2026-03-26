@@ -297,7 +297,9 @@
             <div class="datetime-grid">
               <div class="datetime-col">
                 <label class="lbl" for="prefer1Date">日付</label>
-                <input type="date" id="prefer1Date" required name="prefer1Date" />
+                <select id="prefer1Date" required name="prefer1Date">
+                  <option value="">選択</option>
+                </select>
               </div>
               <div class="datetime-col">
                 <label class="lbl" for="prefer1Hour">時</label>
@@ -327,7 +329,9 @@
             <div class="datetime-grid">
               <div class="datetime-col">
                 <label class="lbl" for="prefer2Date">日付</label>
-                <input type="date" id="prefer2Date" required name="prefer2Date" />
+                <select id="prefer2Date" required name="prefer2Date">
+                  <option value="">選択</option>
+                </select>
               </div>
               <div class="datetime-col">
                 <label class="lbl" for="prefer2Hour">時</label>
@@ -357,7 +361,9 @@
             <div class="datetime-grid">
               <div class="datetime-col">
                 <label class="lbl" for="prefer3Date">日付</label>
-                <input type="date" id="prefer3Date" required name="prefer3Date" />
+                <select id="prefer3Date" required name="prefer3Date">
+                  <option value="">選択</option>
+                </select>
               </div>
               <div class="datetime-col">
                 <label class="lbl" for="prefer3Hour">時</label>
@@ -568,8 +574,42 @@
       var MIN_DAYS_AHEAD = 14;
       var DATE_TOO_EARLY_MSG = "予約日は本日から2週間後以降を選択してください。";
       var minDate = toDateValue(minFromNowDays(MIN_DAYS_AHEAD));
+
+      function formatDateLabel(yyyyMmDd) {
+        // "2026-04-09" -> "4/9（木）" のように表示
+        var parts = yyyyMmDd.split("-");
+        if (parts.length !== 3) return yyyyMmDd;
+        var y = Number(parts[0]);
+        var m = Number(parts[1]);
+        var d = Number(parts[2]);
+        var dt = new Date(y, m - 1, d);
+        var w = ["日", "月", "火", "水", "木", "金", "土"];
+        return m + "/" + d + "（" + w[dt.getDay()] + "）";
+      }
+
+      function addDays(dateObj, days) {
+        var d = new Date(dateObj.getTime());
+        d.setDate(d.getDate() + days);
+        return d;
+      }
+
+      function populateDateSelect(selectEl) {
+        // 2週間後〜先90日分を選択肢として提示（必要なら増減可）
+        var start = minFromNowDays(MIN_DAYS_AHEAD);
+        var end = addDays(start, 90);
+        var cursor = new Date(start.getTime());
+        while (cursor <= end) {
+          var value = toDateValue(cursor);
+          var opt = document.createElement("option");
+          opt.value = value;
+          opt.textContent = formatDateLabel(value);
+          selectEl.appendChild(opt);
+          cursor = addDays(cursor, 1);
+        }
+      }
+
       preferKeys.forEach(function (key) {
-        getPreferElements(key).date.min = minDate;
+        populateDateSelect(getPreferElements(key).date);
       });
 
       function refreshPreferredValidity() {
@@ -595,15 +635,6 @@
       preferKeys.forEach(function (key) {
         var el = getPreferElements(key);
         el.date.addEventListener("change", function () {
-          // iOSなどで min がピッカーUIに反映されない場合があるため、
-          // 選択された値をここで強制的に補正する。
-          if (el.date.value && el.date.value < minDate) {
-            el.date.value = minDate;
-            el.date.setCustomValidity(DATE_TOO_EARLY_MSG);
-            el.date.reportValidity();
-          } else {
-            el.date.setCustomValidity("");
-          }
           applyBlockingToSelects(key);
           refreshPreferredValidity();
         });
