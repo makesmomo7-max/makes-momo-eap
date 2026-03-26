@@ -343,11 +343,55 @@
         "どんな小さなことでも、気軽に話しかけてください😊";
 
       var RISK_TEXT =
-        "あなたのことがとても心配です。\n" +
-        "今すぐ、専門家に話を聞いてもらいませんか。\n" +
-        "一人で抱え込まないでください。";
+        "それは本当にお辛いですね。今までお一人でよく頑張られましたね。\n\n" +
+        "私（AI）もお話を聞きますが、今の状況は専門のカウンセラーや看護師に直接相談することで、より具体的な解決策が見つかるかもしれません。\n" +
+        "よければ、今のタイミングで専門家に繋げませんか。";
 
-      var RISK_REGEX = /死にたい|消えたい|限界|つらい|もう無理|消えてしまいたい/;
+      // Risk keywords: user-provided groups
+      var RISK_KEYWORDS = [
+        // 自傷・他害
+        "死にたい", "消えたい", "楽になりたい", "遺言", "殺して", "OD", "リスカ", "刃物",
+        // 身体症状
+        "眠れない", "食欲がない", "起き上がれない", "動悸", "涙が止まらない", "味覚消失",
+        // 就業困難
+        "会社が怖い", "パワハラ", "ミスを繰り返す", "辞めるしかない", "休職", "退職",
+        // 精神的危機
+        "感情がない", "空虚", "パニック", "自分が悪い", "罪悪感", "絶望",
+        // 生活崩壊
+        "お風呂に入れない", "ゴミが捨てられない", "泥酔", "借金"
+      ];
+
+      // Context signals: "深刻な苦痛" / "機能不全" を示唆する語
+      var SEVERITY_SIGNALS = [
+        "限界", "もう無理", "しんどい", "つらい", "苦しい", "耐えられない",
+        "動けない", "行けない", "行けなくなった", "起きられない",
+        "仕事にならない", "何もできない", "誰にも言えない", "助けて"
+      ];
+
+      function includesAny(text, list) {
+        for (var i = 0; i < list.length; i++) {
+          if (text.indexOf(list[i]) !== -1) return true;
+        }
+        return false;
+      }
+
+      function assessRisk(text) {
+        var t = (text || "").trim();
+        if (!t) return { level: "none" };
+
+        var hasKeyword = includesAny(t, RISK_KEYWORDS);
+        if (!hasKeyword) return { level: "none" };
+
+        // 自傷・他害は単独でも優先度高め
+        var highImmediate = includesAny(t, ["死にたい", "消えたい", "遺言", "殺して", "OD", "リスカ", "刃物"]);
+        var hasSeverity = includesAny(t, SEVERITY_SIGNALS);
+
+        if (highImmediate) return { level: "high" };
+        if (hasSeverity) return { level: "high" };
+
+        // キーワードのみで深刻度が読み取れない場合は "medium"
+        return { level: "medium" };
+      }
 
       var REPLIES = {
         professional:
@@ -454,6 +498,14 @@
         scroll.scrollTop = scroll.scrollHeight;
       }
 
+      function appendMediumRiskAiMessage() {
+        var text =
+          "それは本当にお辛いですね。今までお一人でよく頑張られましたね。\n\n" +
+          "私（AI）もお話を聞きますが、もし今のつらさが続いているなら、専門のカウンセラーや看護師に直接相談することで、より具体的なサポートにつながるかもしれません。\n\n" +
+          "画面下の「専門家に相談する」ボタンから、いつでも予約いただけます。お力にならせてくださいね。";
+        appendMessage("ai", text);
+      }
+
       function pickReply(userText) {
         var t = userText.trim();
         if (!t) return REPLIES.default;
@@ -473,8 +525,11 @@
         input.style.height = "auto";
         btnSend.disabled = true;
         window.setTimeout(function () {
-          if (RISK_REGEX.test(t)) {
+          var risk = assessRisk(t);
+          if (risk.level === "high") {
             appendRiskAiMessage();
+          } else if (risk.level === "medium") {
+            appendMediumRiskAiMessage();
           } else {
             appendMessage("ai", pickReply(t));
           }
