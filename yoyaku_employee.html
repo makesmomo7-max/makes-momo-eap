@@ -247,20 +247,7 @@
     </header>
 
     <div id="form-root">
-      <form
-        id="reserveForm"
-        name="employee-consultation"
-        method="POST"
-        action="/thanks.html"
-        data-netlify="true"
-        netlify
-        netlify-honeypot="bot-field"
-        novalidate
-      >
-        <input type="hidden" name="form-name" value="employee-consultation" />
-        <p style="display:none;">
-          <label>Do not fill this out if you are human: <input name="bot-field" /></label>
-        </p>
+      <form id="reserveForm" novalidate>
         <div class="assure" role="note">
           <span class="ico" aria-hidden="true">💙</span>
           ご相談内容は会社には一切伝わりません。<br />
@@ -303,7 +290,7 @@
 
         <div class="card">
           <p class="datetime-intro">
-            日時は本日から2週間後以降、<strong>9:00〜21:00</strong>の範囲でお選びください。
+            日時は本日から、<strong>9:00〜21:00</strong>の範囲でお選びください。
           </p>
           <div class="field">
             <label class="lbl" for="prefer1">希望日時・第1希望<span class="req">必須</span></label>
@@ -578,7 +565,7 @@
         return el.date.value + "T" + el.hour.value + ":" + el.minute.value;
       }
 
-      var minDate = toDateValue(minFromNowDays(14));
+      var minDate = toDateValue(minFromNowDays(0));
       preferKeys.forEach(function (key) {
         getPreferElements(key).date.min = minDate;
       });
@@ -650,7 +637,8 @@
         submitError.classList.remove("show");
       }
 
-      form.addEventListener("submit", function () {
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
         clearSubmitError();
         refreshPreferredValidity();
         if (!form.reportValidity()) return;
@@ -661,6 +649,7 @@
         document.getElementById("prefer3").value = payload.prefer3;
 
         setSubmittingState(true);
+        window.location.href = "./thanks.html";
       });
 
       loadBookedReservations();

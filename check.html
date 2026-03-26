@@ -123,28 +123,6 @@
     }
     .submit-btn:not(:disabled):active { transform: scale(0.98); }
     .submit-btn:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; filter: grayscale(0.2); }
-    .btn-google-form {
-      display: block;
-      width: 100%;
-      margin-top: 0.75rem;
-      padding: 0.85rem 1rem;
-      border-radius: 14px;
-      font-size: 0.95rem;
-      font-weight: 700;
-      font-family: inherit;
-      color: #fff;
-      text-align: center;
-      text-decoration: none;
-      background: linear-gradient(180deg, var(--accent) 0%, var(--main) 100%);
-      box-shadow: 0 6px 18px rgba(26, 43, 74, 0.25);
-      transition: transform 0.15s, filter 0.2s;
-      border: none;
-      cursor: pointer;
-      box-sizing: border-box;
-    }
-    .btn-google-form:hover { filter: brightness(1.05); }
-    .btn-google-form:active { transform: scale(0.98); }
-    .success-panel .btn-google-form { margin-top: 1.15rem; }
     .success-panel { display: none; text-align: center; padding: 2rem 1rem; }
     .success-panel.show { display: block; }
     .success-panel .icon { font-size: 3rem; margin-bottom: 0.75rem; line-height: 1; }
@@ -240,24 +218,12 @@
         </section>
         <div class="submit-wrap">
           <button type="submit" class="submit-btn" id="submitBtn" disabled>記録する</button>
-          <a
-            class="btn-google-form"
-            href="https://forms.gle/JUcj38vMKKQG3bv87"
-            target="_blank"
-            rel="noopener noreferrer"
-          >Googleフォームで回答する</a>
         </div>
       </form>
     </div>
     <div class="success-panel card" id="successPanel" role="status" aria-live="polite">
       <div class="icon" aria-hidden="true">✨</div>
       <p>今日も記録できました！お疲れさまです😊</p>
-      <a
-        class="btn-google-form"
-        href="https://forms.gle/JUcj38vMKKQG3bv87"
-        target="_blank"
-        rel="noopener noreferrer"
-      >Googleフォームで回答する</a>
     </div>
   </div>
   <nav class="bottom-nav" aria-label="メインメニュー">
