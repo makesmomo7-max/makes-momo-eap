@@ -290,7 +290,7 @@
 
         <div class="card">
           <p class="datetime-intro">
-            日時は本日から、<strong>9:00〜21:00</strong>の範囲でお選びください。
+            日時は本日から2週間後以降、<strong>9:00〜21:00</strong>の範囲でお選びください。
           </p>
           <div class="field">
             <label class="lbl" for="prefer1">希望日時・第1希望<span class="req">必須</span></label>
@@ -565,17 +565,20 @@
         return el.date.value + "T" + el.hour.value + ":" + el.minute.value;
       }
 
-      var minDate = toDateValue(minFromNowDays(0));
+      var minDate = toDateValue(minFromNowDays(14));
       preferKeys.forEach(function (key) {
         getPreferElements(key).date.min = minDate;
       });
 
       function refreshPreferredValidity() {
         var msg = "9:00〜21:00の間でお選びください。";
+        var dateMsg = "予約日は本日から2週間後以降を選択してください。";
         var blockedMsg = "選択した時刻は予約済みです。予約開始から75分後以降の時刻をお選びください。";
         preferKeys.forEach(function (key) {
           var el = getPreferElements(key);
+          var isValidDate = !el.date.value || el.date.value >= minDate;
           var isValidHour = !el.hour.value || isTimeInServiceWindow(el.hour.value);
+          el.date.setCustomValidity(isValidDate ? "" : dateMsg);
           el.hour.setCustomValidity(isValidHour ? "" : msg);
           el.minute.setCustomValidity("");
 
