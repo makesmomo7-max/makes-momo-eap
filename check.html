@@ -342,16 +342,37 @@
           headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
           body: params.toString()
         })
-          .then(function (r) { return r.json().catch(function () { return null; }); })
+          .then(function (r) {
+            return r
+              .text()
+              .then(function (t) {
+                var data = null;
+                try { data = JSON.parse(t); } catch (e) {}
+                return { ok: r.ok, status: r.status, text: t, data: data };
+              });
+          })
           .then(function (data) {
-            if (!data || data.ok !== true) throw new Error("保存に失敗しました");
+            var bodyText = (data && data.text ? String(data.text) : "").trim();
+            var jsonOk = !!(data && data.ok === true && data.data && data.data.ok === true);
+            var legacyOk = bodyText === "success" || bodyText === "ok" || bodyText === "OK";
+            if (!jsonOk && !legacyOk) {
+              throw new Error(
+                "保存に失敗しました（status=" +
+                  (data ? data.status : "?") +
+                  "）\n" +
+                  (data && data.text ? data.text : "")
+              );
+            }
             formRoot.classList.add("hidden");
             successPanel.classList.add("show");
           })
-          .catch(function () {
+          .catch(function (err) {
             submitBtn.disabled = false;
             submitBtn.textContent = "記録する";
-            alert("記録の保存に失敗しました。通信状況を確認して、もう一度お試しください。");
+            alert(
+              "記録の保存に失敗しました。通信状況を確認して、もう一度お試しください。\n\n" +
+                String(err && err.message ? err.message : err)
+            );
           });
       });
     })();
