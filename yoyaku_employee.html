@@ -565,20 +565,21 @@
         return el.date.value + "T" + el.hour.value + ":" + el.minute.value;
       }
 
-      var minDate = toDateValue(minFromNowDays(14));
+      var MIN_DAYS_AHEAD = 14;
+      var DATE_TOO_EARLY_MSG = "予約日は本日から2週間後以降を選択してください。";
+      var minDate = toDateValue(minFromNowDays(MIN_DAYS_AHEAD));
       preferKeys.forEach(function (key) {
         getPreferElements(key).date.min = minDate;
       });
 
       function refreshPreferredValidity() {
         var msg = "9:00〜21:00の間でお選びください。";
-        var dateMsg = "予約日は本日から2週間後以降を選択してください。";
         var blockedMsg = "選択した時刻は予約済みです。予約開始から75分後以降の時刻をお選びください。";
         preferKeys.forEach(function (key) {
           var el = getPreferElements(key);
           var isValidDate = !el.date.value || el.date.value >= minDate;
           var isValidHour = !el.hour.value || isTimeInServiceWindow(el.hour.value);
-          el.date.setCustomValidity(isValidDate ? "" : dateMsg);
+          el.date.setCustomValidity(isValidDate ? "" : DATE_TOO_EARLY_MSG);
           el.hour.setCustomValidity(isValidHour ? "" : msg);
           el.minute.setCustomValidity("");
 
@@ -594,6 +595,15 @@
       preferKeys.forEach(function (key) {
         var el = getPreferElements(key);
         el.date.addEventListener("change", function () {
+          // iOSなどで min がピッカーUIに反映されない場合があるため、
+          // 選択された値をここで強制的に補正する。
+          if (el.date.value && el.date.value < minDate) {
+            el.date.value = minDate;
+            el.date.setCustomValidity(DATE_TOO_EARLY_MSG);
+            el.date.reportValidity();
+          } else {
+            el.date.setCustomValidity("");
+          }
           applyBlockingToSelects(key);
           refreshPreferredValidity();
         });
